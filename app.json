@@ -1,6 +1,16 @@
 {
   "expo": {
     "name": "Assignment4",
+    "plugins": [
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
+  
+          
+        }
+      ]
+    ],
     "slug": "Assignment4",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,6 +21,8 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    
+      
     "assetBundlePatterns": [
       "**/*"
     ],
