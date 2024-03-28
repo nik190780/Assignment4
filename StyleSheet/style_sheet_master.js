@@ -7,14 +7,12 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-around',
-        paddingTop: 40,// Add some padding to keep card away from the edge of the screen
-        paddingLeft: 60,
+        paddingVertical: 40, // Adjust padding to center cards vertically
+        paddingHorizontal: 20, // Adjust padding to center cards horizontally and keep them away from the edges
     },
-
     card: {
         height: 150,
         width: 100,
-
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
@@ -37,6 +35,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         backgroundColor: 'red',
     },
+
 });
 
 export default styles;

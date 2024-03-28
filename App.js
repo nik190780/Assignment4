@@ -1,16 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Animated, TouchableOpacity, Dimensions, ImageBackground, Button } from 'react-native';
+import { Text, View, Animated, TouchableOpacity, Dimensions, ImageBackground, Button, Vibration } from 'react-native';
 import { useRef, useState, useEffect } from 'react';
 import styles from './StyleSheet/style_sheet_master';
 import FlipCard from 'react-native-flip-card';
 import { Camera } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 export default function App() {
     const[isFlipped, setIsFlipped] = useState(false);
     const [orientation, setOrientation] = useState(getOrientation());
     const [hasPermission, setHasPermission] = useState(null);
-    const [photoUris, setPhotoUris] = useState([null, null, null, null]); // Array of photo URIs
+    const [photoUris, setPhotoUris] = useState([null, null, null, null, null, null]); // Array of photo URIs
     const [isCameraVisible, setIsCameraVisible] = useState(false);
-    const [currentCard, setCurrentCard] = useState(null); //
+    const [currentCard, setCurrentCard] = useState(null);
+    const [matchedIndexes, setMatchedIndexes] = useState([]);
+    const [flippedCardIndexes, setFlippedCardIndexes] = useState([]);
 
     const cameraRef = useRef(null);
     function getOrientation() {
@@ -32,6 +35,7 @@ export default function App() {
             setHasPermission(status === 'granted');
         })();
     }, []);
+    
     const takePicture = async () => {
         if (cameraRef.current) {
             const photo = await cameraRef.current.takePictureAsync();
@@ -41,6 +45,10 @@ export default function App() {
             setIsCameraVisible(false);
         }
     };
+    const handleTakePicture = () => {
+        setIsCameraVisible(true);
+    };
+
   const animatedValue = useRef(new Animated.Value(0)).current;
     
     let val = 0;
@@ -68,81 +76,125 @@ export default function App() {
   };
   const textFlip = {
     transform: [{ rotateY: backInterpolate }],
-  };
+    };
+
+    useEffect(() => {
+        (async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                console.error('Camera roll permission not granted!');
+            }
+        })();
+    }, []);
+
+   const getRandomIndex = () => {
+        return Math.floor(Math.random() * photoUris.length);
+    };
+
+
+    const handlePickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            console.error('Camera roll permission not granted!');
+            return;
+        }
+
+        const emptyIndexes = photoUris.reduce((acc, uri, index) => {
+            if (uri === null) {
+                acc.push(index);
+            }
+            return acc;
+        }, []);
+
+        if (emptyIndexes.length === 0) {
+            console.log('No empty flip cards available.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        console.log('Image Picker Result:', result);
+
+        if (!result.cancelled && result.uri) {
+            const randomIndex = emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
+            const newPhotoUris = [...photoUris];
+            newPhotoUris[randomIndex] = result.uri;
+            setPhotoUris(newPhotoUris);
+            console.log('Updated photoUris:', newPhotoUris);
+        }
+    };
+
+
+
+
+    const handleCardFlip = (index) => {
+        if (flippedCardIndexes.length < 2 && !matchedIndexes.includes(index)) {
+            setFlippedCardIndexes((prevFlippedCardIndexes) => [...prevFlippedCardIndexes, index]);
+            setIsFlipped(true); // Flip the card
+        }
+
+        if (flippedCardIndexes.length === 1 && !matchedIndexes.includes(index)) {
+            setTimeout(() => {
+                if (photoUris[flippedCardIndexes[0]] === photoUris[index]) {
+                    Vibration.vibrate();
+                    setMatchedIndexes((prevMatchedIndexes) => [...prevMatchedIndexes, flippedCardIndexes[0], index]);
+                }
+                setFlippedCardIndexes([]);
+                setIsFlipped(false); // Unflip the card after 1 second
+            }, 1000);
+        } else if (flippedCardIndexes.length === 2 && !matchedIndexes.includes(index)) {
+            setFlippedCardIndexes([index]); // If more than 2 cards are flipped, reset the flipped card indexes
+            setIsFlipped(true); // Flip the card
+        }
+    };
+
 
     return (
         <>
             {isCameraVisible ? (
                 <View style={{ flex: 1 }}>
                     <Camera style={{ flex: 1 }} ref={cameraRef} />
-                    <Button title="Take Photo" onPress={takePicture} />
+                    <Button title="Take Photo" onPress={() => setIsCameraVisible(false)} />
                 </View>
             ) : (
                 <>
-                    <View style={styles.container}>
-                        {[0, 1].map((index) => (
-                            <FlipCard key={index}>
-                                <Animated.View style={[styles.card, styles.face, frontAnimatedStyle]}>
-                                    <Text>Front</Text>
-                                    <Button title="Set Photo" onPress={() => { setCurrentCard(index); setIsCameraVisible(true); }} />
-                                </Animated.View>
-                                <Animated.View style={[styles.card, styles.back, backAnimatedStyle]}>
-                                    {photoUris[index] ? (
-                                        <ImageBackground source={{ uri: photoUris[index] }} style={{ flex: 1 }}>
-                                            <Animated.Text style={textFlip}>Back</Animated.Text>
-                                        </ImageBackground>
-                                    ) : (
-                                        <Animated.Text style={textFlip}>Back</Animated.Text>
-                                    )}
-                                </Animated.View>
-                            </FlipCard>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        {[...Array(6).keys()].map((index) => (
+                            <TouchableOpacity key={index} onPress={() => handleCardFlip(index)} disabled={photoUris[index] === null} style={{ margin: 5, marginTop: 100 }}>
+                                <View style={{ width: 100, height: 100 }}>
+                                    <FlipCard style={{ width: '100%', height: '100%' }} flip={isFlipped}>
+                                        <View style={{ justifyContent: 'center', alignItems: 'center', backgroundColor: 'blue', width: '100%', height: '100%' }}>
+                                            <Text>Front</Text>
+                                        </View>
+                                        <View style={{ justifyContent: 'center', alignItems: 'center', backgroundColor: 'red', width: '100%', height: '100%' }}>
+                                            {photoUris[index] && <Image source={{ uri: photoUris[index] }} style={{ width: 80, height: 80 }} />}
+                                            {!photoUris[index] && <Text>Back</Text>}
+                                        </View>
+                                    </FlipCard>
+                                </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
-                    <View style={styles.container}>
-                        {[2, 3].map((index) => (
-                            <FlipCard key={index}>
-                                <Animated.View style={[styles.card, styles.face, frontAnimatedStyle]}>
-                                    <Text>Front</Text>
-                                    <Button title="Set Photo" onPress={() => { setCurrentCard(index); setIsCameraVisible(true); }} />
-                                </Animated.View>
-                                <Animated.View style={[styles.card, styles.back, backAnimatedStyle]}>
-                                    {photoUris[index] ? (
-                                        <ImageBackground source={{ uri: photoUris[index] }} style={{ flex: 1 }}>
-                                            <Animated.Text style={textFlip}>Back</Animated.Text>
-                                        </ImageBackground>
-                                    ) : (
-                                        <Animated.Text style={textFlip}>Back</Animated.Text>
-                                    )}
-                                </Animated.View>
-                            </FlipCard>
-                        ))}
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 }}>
+                        <TouchableOpacity onPress={handlePickImage} style={{ margin: 5 }}>
+                            <View style={{ width: 100, height: 50, backgroundColor: 'green', justifyContent: 'center', alignItems: 'center' }}>
+                                <Text>Choose Photos</Text>
+                            </View>
+                        </TouchableOpacity>
+                        {/* New button to take a photo */}
+                        <TouchableOpacity onPress={handleTakePicture} style={{ margin: 5 }}>
+                            <View style={{ width: 100, height: 50, backgroundColor: 'blue', justifyContent: 'center', alignItems: 'center' }}>
+                                <Text>Take Picture</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </>
             )}
-            <View style={styles.containerTwo}>
-                <View style={{ flexDirection: 'row' }}>
-                    <FlipCard>
-                        <Animated.View style={[styles.card, styles.face, frontAnimatedStyle]}>
-                            <Text>Front</Text>
-                        </Animated.View>
-                        <Animated.View style={[styles.card, styles.back, backAnimatedStyle]}>
-                            <Animated.Text style={textFlip}>Back</Animated.Text>
-                        </Animated.View>
-                    </FlipCard>
-                    <FlipCard>
-                        <Animated.View style={[styles.card, styles.face, frontAnimatedStyle]}>
-                            <Text>Front</Text>
-                        </Animated.View>
-                        <Animated.View style={[styles.card, styles.back, backAnimatedStyle]}>
-                            <Animated.Text style={textFlip}>Back</Animated.Text>
-                        </Animated.View>
-                    </FlipCard>
-                </View>
-                <StatusBar style="auto" />
-            </View>
+            <StatusBar style="auto" />
         </>
-
-
     );
-  
 }
