@@ -14,8 +14,12 @@
         {
           "photosPermission": "The app accesses your photos"
         }
+      ],
+      [
+        "expo-av"
+        
       ]
-    ],
+      ],
     "slug": "Assignment4",
     "version": "1.0.0",
     "orientation": "default",
