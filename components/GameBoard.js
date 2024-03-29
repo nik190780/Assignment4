@@ -23,6 +23,16 @@ export default function GameBoard() {
     const [unsuccessfulAttempts, setUnsuccessfulAttempts] = useState(0);
     const [cards, setCards] = useState([]);
 
+    async function playUnsuccessfulSound() {
+        try {
+            const sound = new Audio.Sound();
+            await sound.loadAsync(require('../assets/Sounds/soundLoss.mp3'));
+            await sound.playAsync();
+        } catch (err) {
+            console.error("Error playing sound: ", err);
+        }
+    }
+
     useEffect(() => {
         resetGame();
     }, []);
@@ -99,7 +109,8 @@ export default function GameBoard() {
                     const newAttemptsCount = unsuccessfulAttempts + 1;
                     setUnsuccessfulAttempts(newAttemptsCount);
                     if (newAttemptsCount >= 10) {
-
+                        playUnsuccessfulSound();
+                        setUnsuccessfulAttempts(0);
                     }
                     setTimeout(() => {
                         tempCards[firstIndex].isFlipped = false;
@@ -107,7 +118,7 @@ export default function GameBoard() {
 
                         setCards(tempCards); // Update the cards' state after the delay
                         setFlippedIndexes([]); // Clear flippedIndexes for next turn
-                        checkForAllMatches(tempCards);
+                        
                     }, 700); // Short delay to allow the player to see the second card
                 }
             }
