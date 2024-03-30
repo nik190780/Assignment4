@@ -1,6 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\assets",
+    "\\components"
   ],
+  "SelectedNode": "\\components\\GameBoard.js",
   "PreviewInSolutionExplorer": false
 }
