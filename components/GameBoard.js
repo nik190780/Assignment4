@@ -23,7 +23,7 @@ export default function GameBoard() {
     const cardWidth = (screenWidth - cardMargin * 2 * cardsPerRow) / cardsPerRow; // Calculate card width
     const [score, setScore] = useState(0); // State to store the score
     const cardsPerRowLandscape = 4; // Landscape mode
-    const cardsPerRowPortrait = 3; // Portrait mode, adjust as needed
+    const cardsPerRowPortrait = 3; // Portrait mode, adjust as needed to fit your phone
     const [orientation, setOrientation] = useState('Portrait'); // State to store the orientation
     // Function to initialize the database
     const initDB = () => {
