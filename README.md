@@ -1,6 +1,6 @@
-This is for Assignment4 The Dependencies that are installed are react-native-flip-card, expo-file-system, expo-sqlite, react-camera, expo-av
-The current dependecies that are being used are expo-av 
+This is for Assignment4 The Dependencies that are installed are expo-av, expo-camera, expo-file-system, expo-image-picker, expo-sqlite, expo-status-bar, react, react-native, react-native-flip-card.
 For Vibration took inspiration from https://github.com/s0528852/VibrationApp
 and for the dynamic-layout https://snack.expo.dev/@stephengraham/dynamic-layout
+also took some snippets of code and inspiration from https://javascript.plainenglish.io/building-a-card-memory-game-in-react-e6400b226b8f
 
-This README is still due to change by the addition of dependenceis and other information that I might find important for the users.
+
